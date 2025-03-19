@@ -8,10 +8,6 @@
 - [Machine Learning Pipeline](#machine-learning-pipeline)
 - [Installation & Setup](#installation--setup)
 - [API Endpoints](#api-endpoints)
-- [Folder Structure](#folder-structure)
-- [Future Enhancements](#future-enhancements)
-- [Contributors](#contributors)
-- [License](#license)
 
 ## Overview
 This project is an **AI-powered financial assistant** designed to:
