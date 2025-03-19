@@ -118,31 +118,3 @@ This project generates **synthetic customer data** using `Faker`. It includes:
   }
   ```
 
-## Folder Structure
-```
-📦 project-directory
-├── models/                  # Pre-trained ML models (saved using joblib)
-├── templates/
-│   ├── index.html           # Web UI template
-├── static/
-│   ├── styles.css           # UI styles
-├── app.py                   # Main Flask application
-├── requirements.txt         # Dependencies
-├── README.md                # Project documentation
-└── data/                    # (Optional) Sample datasets
-```
-
-## Future Enhancements
-- **Integration with Real Banking APIs** for live transaction analysis.
-- **Reinforcement Learning** for self-improving recommendation models.
-- **Advanced Customer Profiling** using deep learning techniques.
-
-## Contributors
-- **Your Name** – Developer
-
-## License
-This project is licensed under the **MIT License**.
-
----
-For any issues or queries, please raise a **GitHub issue** or contact **[Your Email]**.
-
