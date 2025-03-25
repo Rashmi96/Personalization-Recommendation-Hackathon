@@ -336,34 +336,142 @@ def initialize_model(model_id='HuggingFaceH4/zephyr-7b-beta'):
     return HuggingFacePipeline(pipeline=query_pipeline)
 
 
+import streamlit as st
+from langchain.prompts import PromptTemplate
+from langchain.chains import RetrievalQA
+
+# ---- Set Page Configuration ----
+st.set_page_config(
+    page_title="AI Financial Advisor",
+    page_icon="💰",
+    layout="wide"
+)
+
+# ---- Custom CSS for Better Styling ----
+st.markdown("""
+    <style>
+        /* Background color */
+        body, [data-testid="stAppViewContainer"] {
+            background-color: #F4F4F4;
+        }
+
+        /* Sidebar styling */
+        [data-testid="stSidebar"] {
+            background-color: #2C3E50;
+            color: white;
+        }
+
+        /* Sidebar text color */
+        [data-testid="stSidebar"] h2, 
+        [data-testid="stSidebar"] h3, 
+        [data-testid="stSidebar"] p {
+            color: white !important;
+        }
+
+        /* Input box styling */
+        input[type="text"] {
+            border-radius: 10px;
+            padding: 10px;
+            border: 2px solid #3498DB;
+            font-size: 16px;
+        }
+
+        /* Button styling */
+        div.stButton > button {
+            background-color: #3498DB;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 16px;
+            border: none;
+        }
+        div.stButton > button:hover {
+            background-color: #2980B9;
+        }
+
+        /* Styled recommendation box */
+        .result-box {
+            border: 2px solid #3498DB;
+            border-radius: 10px;
+            padding: 15px;
+            background-color: white;
+            font-size: 18px;
+        }
+
+    </style>
+""", unsafe_allow_html=True)
+
+
 def main():
-    st.title("AI-Powered Financial Recommendation System")
-    st.write("### Ask a financial question:")
-    user_input = st.text_input("Enter your query:")
-
-    if st.button("Get Recommendation"):
+    # ---- Sidebar for Branding & Navigation ----
+    with st.sidebar:
+        st.image("/content/logo-png.png", use_container_width=True)  # Full-width logo
+        st.markdown("<h2 style='text-align: center;'>AI Financial Advisor</h2>", unsafe_allow_html=True)
+        st.write("💡 Get personalized recommendations based on your profile.")
+        st.write("🔹 Enter Your user details.")
+        st.write("🔹 Click **Get Recommendation** to see suggestions.")
+        st.markdown("---")  # Adds a separator
+    
+    # ---- Main App UI ----
+    st.markdown("<h1 style='text-align: center; color: #2C3E50;'>💰 AI-Powered Personalized Recommendation System</h1>", unsafe_allow_html=True)
+    st.markdown("<h3 style='text-align: center; color: #555;'>Enter Your user details:</h3>", unsafe_allow_html=True)
+    
+    # Centered Input Box
+    col1, col2, col3 = st.columns([1, 3, 1])
+    with col2:
+        user_input = st.text_input("Enter your query:", placeholder='e.g., {"customer_id": "a85af6e6-0033-4998-a0f4-5e8519896552", "name": "Jeffrey Nicholson", "age": 55.0, "gender": "Male", "marital_status": "Divorced", "education": "Bachelor", "occupation": "Medical sales representative", "salary": 79520, "loan_amount": 673258.6666666666, "credit_limit": 48706.0, "credit_utilization": 0.3406952638277163, "emi_paid": 84.0, "tenure_months": 60.666666666666664, "max_dpd": 120.0, "default_status": 0.3333333333333333, "enquiry_amount": 285356.0, "unique_products_enquired": 2.0, "total_enquiries": 2.0, "transaction_amount": 8657.701868940421, "account_balance": 19737.778617612592, "is_salary": 1.0, "Credit Card": true, "Home Loan": true, "Personal Loan": false}', label_visibility="collapsed")
+    
+    st.markdown("<br>", unsafe_allow_html=True)  # Add spacing
+    
+    # Centered Button
+    col4, col5, col6 = st.columns([2, 2, 2])
+    with col5:
+        submit_button = st.button("🔍 Get Recommendation", use_container_width=True)
+    
+    # ---- Handle Recommendation Logic ----
+    if submit_button:
         if user_input:
-            df_final = generate_customer_data()
-            langchain_chroma = create_chroma_vector_store(df_final)
-            llm = initialize_model()
-            template = """
-            Based on the following customer data, suggest a suitable financial product.
-            Return only the product name with brief explanation.
-
-            Customer Data: {question}
-            """
-            PROMPT = PromptTemplate(template=template, input_variables=["question"])
-            qa_chain = RetrievalQA.from_chain_type(
-            llm=llm,
-            retriever=langchain_chroma.as_retriever(search_kwargs={"k":1}),
-            chain_type_kwargs={"prompt":PROMPT}
-            )
-            response = qa_chain({"query": user_input})
-            st.write("### Recommendation:")
-            st.write(response)
+            with st.spinner("🔄 Processing your request..."):
+                try:
+                    # Load data and models
+                    df_final = generate_customer_data()
+                    langchain_chroma = create_chroma_vector_store(df_final)
+                    llm = initialize_model()
+                    
+                    # Define prompt
+                    template = """
+                    Based on the following customer data, suggest a suitable financial product.
+                    Return only the product name with a brief explanation.
+                    Customer Data: {question}
+                    Context: {context}
+                    Answer:
+                    """
+                    PROMPT = PromptTemplate(template=template, input_variables=["context","question"])
+                    
+                    # Set up QA Chain
+                    qa_chain = RetrievalQA.from_chain_type(
+                        llm=llm,
+                        retriever=langchain_chroma.as_retriever(search_kwargs={"k": 1}),
+                        chain_type_kwargs={"prompt": PROMPT}
+                    )
+                    
+                    # Generate response
+                    response = qa_chain({"query": user_input})
+                    
+                    # ---- Display Styled Response ----
+                    st.markdown("<br>", unsafe_allow_html=True)  # Add spacing
+                    st.success("✅ Recommendation:")
+                    st.markdown(f"""
+                    <div class="result-box">
+                        <b>{response["result"]}</b>
+                    </div>
+                    """, unsafe_allow_html=True)
+                
+                except Exception as e:
+                    st.error(f"⚠️ Error: {e}")
         else:
-            st.warning("Please enter a query.")
-
+            st.warning("⚠️ Please enter a query.")
 
 if __name__ == "__main__":
     main()
+
